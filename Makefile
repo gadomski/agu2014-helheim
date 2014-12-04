@@ -22,24 +22,22 @@ PDAL_CMAKE_ARGS = -DBUILD_PLUGIN_CPD=TRUE \
 
 
 
-# Top-level targets
-pdal: $(PDAL_CPD_PLUGIN)
+# Build targets
+pdal: $(PDAL_BUILD_DIR)/CMakeCache.txt
+	ninja -C $(PDAL_BUILD_DIR)
 .PHONY: pdal
 
-cpd: $(CPD_LIB)
-.PHONY: cpd
-
-
-# Business targets
-$(PDAL_CPD_PLUGIN): $(CPD_LIB) | $(PDAL_BUILD_DIR)
+$(PDAL_BUILD_DIR)/CMakeCache.txt: | $(PDAL_BUILD_DIR)
 	cd $(PDAL_BUILD_DIR) && \
-		cmake $(PDAL_SOURCE_DIR) $(COMMON_CMAKE_ARGS) $(PDAL_CMAKE_ARGS) && \
-		$(BUILD_CMD)
+		cmake $(PDAL_SOURCE_DIR) $(COMMON_CMAKE_ARGS) $(PDAL_CMAKE_ARGS)
 
-$(CPD_LIB): | $(CPD_BUILD_DIR)
+cpd: $(CPD_BUILD_DIR)/CMakeCache.txt
+	ninja -C $(CPD_BUILD_DIR)
+
+$(CPD_BUILD_DIR)/CMakeCache.txt: | $(CPD_BUILD_DIR)
 	cd $(CPD_BUILD_DIR) && \
-		cmake $(CPD_SOURCE_DIR) $(COMMON_CMAKE_ARGS) $(CPD_CMAKE_ARGS) && \
-		$(BUILD_CMD)
+		cmake $(CPD_SOURCE_DIR) $(COMMON_CMAKE_ARGS) $(CPD_CMAKE_ARGS)
+.PHONY: cpd
 
 
 # Directory targets
