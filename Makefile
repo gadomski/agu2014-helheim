@@ -11,17 +11,19 @@ CPD_CMAKE_ARGS = -DBUILD_CLI=FALSE \
 				 -DBUILD_64BIT=TRUE
 
 PDAL_BUILD_DIR = .pdal-build
-PDAL_EXE = $(PDAL_BUILD_DIR)/bin/pdal
+PDAL_DRIVER_PATH = $(PDAL_BUILD_DIR)/lib
+PDAL_EXE = PDAL_DRIVER_PATH=$(PDAL_DRIVER_PATH) $(PDAL_BUILD_DIR)/bin/pdal
+PDAL_CPD_PLUGIN = $(PDAL_BUILD_DIR)/lib/pdal_plugin_kernel_cpd.dylib
 PDAL_SOURCE_DIR = /Users/gadomski/Repos/PDAL
 PDAL_CMAKE_ARGS = -DBUILD_PLUGIN_CPD=TRUE \
-				  -DCPD_INCLUDE_DIR=$(CPD_SOURCE_DIR)/include/cpd \
+				  -DCPD_INCLUDE_DIR=$(CPD_SOURCE_DIR)/include \
 				  -DCPD_LIBRARY=$(CURDIR)/$(CPD_LIB) \
 				  -DBUILD_PLUGIN_PGPOINTCLOUD=FALSE
 
 
 
 # Top-level targets
-pdal: $(PDAL_EXE)
+pdal: $(PDAL_CPD_PLUGIN)
 .PHONY: pdal
 
 cpd: $(CPD_LIB)
@@ -29,7 +31,7 @@ cpd: $(CPD_LIB)
 
 
 # Business targets
-$(PDAL_EXE): $(CPD_LIB) | $(PDAL_BUILD_DIR)
+$(PDAL_CPD_PLUGIN): $(CPD_LIB) | $(PDAL_BUILD_DIR)
 	cd $(PDAL_BUILD_DIR) && \
 		cmake $(PDAL_SOURCE_DIR) $(COMMON_CMAKE_ARGS) $(PDAL_CMAKE_ARGS) && \
 		$(BUILD_CMD)
