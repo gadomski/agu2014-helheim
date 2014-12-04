@@ -1,0 +1,29 @@
+#!/usr/bin/env python
+from itertools import tee, izip
+import os.path
+import sys
+
+filename = sys.argv[1]
+dirname = sys.argv[2]
+with open(filename) as f:
+    content = f.readlines()
+
+filenames = [x.strip('\n') for x in content]
+
+def pairwise(iterable):
+    a, b = tee(iterable)
+    next(b, None)
+    return izip(a, b)
+
+def print_targets(x, y):
+    xname, _ = os.path.splitext(x)
+    yname, _ = os.path.splitext(y)
+    name = xname + "-" + yname
+    print """\
+$(CHANGE_DIR)/%(name)s.txt: $(LASFILE_DIR)/%(x)s $(LASFILE_DIR)/%(y)s | $(CHANGE_DIR)
+\t$(PDAL_EXE) cpd -x $(firstword $^) -y $(lastword $^) -o $@ $(PDAL_CPD_ARGS) 2> >(tee $(@:%%.txt=%%.log) >&2)
+$(PNG_DIR)/%(name)s.png: $(CHANGE_DIR)/%(name)s.txt $(PLOT_SCRIPT) | $(PNG_DIR)
+\trscript $(PLOT_SCRIPT) $< $@"""  % locals()
+
+for x, y in pairwise(filenames):
+    print_targets(x, y)
