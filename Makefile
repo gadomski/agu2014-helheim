@@ -13,7 +13,7 @@ CPD_CMAKE_ARGS = -DBUILD_CLI=FALSE \
 
 PDAL_BUILD_DIR = .pdal-build
 PDAL_DRIVER_PATH = $(PDAL_BUILD_DIR)/lib
-PDAL_EXE = time PDAL_DRIVER_PATH=$(PDAL_DRIVER_PATH) $(PDAL_BUILD_DIR)/bin/pdal
+PDAL_EXE = PDAL_DRIVER_PATH=$(PDAL_DRIVER_PATH) $(PDAL_BUILD_DIR)/bin/pdal
 PDAL_CPD_PLUGIN = $(PDAL_BUILD_DIR)/lib/pdal_plugin_kernel_cpd.dylib
 PDAL_SOURCE_DIR = /Users/gadomski/Repos/PDAL
 PDAL_CMAKE_ARGS = -DBUILD_PLUGIN_CPD=TRUE \
@@ -34,13 +34,32 @@ NUMEIG = 100
 PDAL_CPD_ARGS = --bounds $(BOUNDS) --numeig $(NUMEIG)
 CHANGE_DIR = change
 PNG_DIR = png
+TEXT_DIR = text
 PLOT_SCRIPT = plot-magnitude.R
+TEXT_FILES = $(patsubst %.las,$(TEXT_DIR)/%.txt,$(shell cat $(LASFILE_MANIFEST)))
 
+all:
+.PHONY: all
+
+# CPD targets
 include change.mk
 
 change.mk: Makefile generate
 	rm -f $@
 	./generate "$(LASFILE_MANIFEST)" "$(LASFILE_DIR)" > $@
+
+
+# Text file generation
+las-to-txt: $(TEXT_FILES)
+.PHONY: las-to-txt
+
+$(TEXT_DIR)/%.txt: $(LASFILE_DIR)/%.las | $(TEXT_DIR)
+	$(PDAL_EXE) translate -i $< -o $@ \
+	    --bounds $(BOUNDS) \
+	    --writers.text.keep_unspecified=false \
+	    --writers.text.order=X,Y,Z \
+	    --writers.text.precision=3 \
+	    --writers.text.write_header=false
 
 
 # Build targets
@@ -72,4 +91,7 @@ $(CHANGE_DIR):
 	mkdir $@
 
 $(PNG_DIR):
+	mkdir $@
+
+$(TEXT_DIR):
 	mkdir $@
