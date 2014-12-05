@@ -24,6 +24,7 @@ PDAL_CMAKE_ARGS = -DBUILD_PLUGIN_CPD=TRUE \
 LASFILE_DIR = ../las/1m
 PLOT_SCRIPT = plot.R
 VELOCITY_SCRIPT = velocities.R
+COMARISON_SCRIPT = comparison.R
 
 BATCH_DIR = hg02
 NUMEIG = 0
@@ -44,7 +45,8 @@ PDAL_CPD_ARGS = --bounds $(BOUNDS) --numeig $(NUMEIG) --tol $(TOL)
 CHANGE_DIR = $(BATCH_DIR)/change
 PNG_DIR = $(BATCH_DIR)/png
 TEXT_DIR = $(BATCH_DIR)/text
-VELOCITY_DIR = $(BATCH_DIR)/velocity
+VELOCITY_IMG = $(BATCH_DIR)/velocities.png
+COMPARISON_CSV = $(BATCH_DIR)/comparison.csv
 TEXT_FILES = $(patsubst %.las,$(TEXT_DIR)/%.txt,$(shell cat $(LASFILE_MANIFEST)))
 
 all:
@@ -64,11 +66,18 @@ change.mk: Makefile generate
 
 
 # Plot velocities
-velocities: $(BATCH_DIR)/velocities.png
+velocities: $(VELOCITY_IMG)
 .PHONY: velocities
 
-$(BATCH_DIR)/velocities.png: $(GPSFILE) all-change | $(BATCH_DIR)
+$(VELOCITY_IMG): $(GPSFILE) all-change | $(BATCH_DIR)
 	rscript $(VELOCITY_SCRIPT) $< $(CHANGE_DIR) $@
+
+# Save csv comparison
+comparison: $(COMPARISON_CSV)
+.PHONY: comparison
+
+$(COMPARISON_CSV): $(GPSFILE) all-change | $(BATCH_DIR)
+	rscript $(COMARISON_SCRIPT) $< $(CHANGE_DIR) $@
 
 
 # Text file generation
