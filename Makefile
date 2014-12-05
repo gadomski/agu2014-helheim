@@ -69,7 +69,7 @@ $(TEXT_DIR)/%.txt: $(LASFILE_DIR)/%.las | $(TEXT_DIR)
 
 
 # Build targets
-pdal: $(PDAL_BUILD_DIR)/CMakeCache.txt cpd
+pdal: cpd $(PDAL_BUILD_DIR)/CMakeCache.txt
 	ninja -C $(PDAL_BUILD_DIR)
 .PHONY: pdal
 
