@@ -34,11 +34,21 @@ $(PNG_DIR)/%(name)s.png: $(CHANGE_DIR)/%(name)s.txt $(PLOT_SCRIPT) | $(PNG_DIR)
 \trscript $(PLOT_SCRIPT) $< $@"""  % locals()
     return "$(PNG_DIR)/%s.png" % name
 
+def print_velocity_target(x, y):
+    name = get_name(x, y)
+    print """\
+$(VELOCITY_DIR)/%(name)s.png: $(CHANGE_DIR)/%(name)s.txt $(PLOT_SCRIPT) | $(VELOCITY_DIR)
+\trscript $(VELOCITY_SCRIPT) $< $@"""  % locals()
+    return "$(VELOCITY_DIR)/%s.txt" % name
+
 change_targets = []
 png_targets = []
+velocity_targets = []
 for x, y in pairwise(filenames):
     change_targets += [print_change_target(x, y)]
     png_targets += [print_png_target(x, y)]
+    velocity_targets += [print_velocity_target(x, y)]
 
 print "all-change: %s\n.PHONY: all-change" % ' '.join(change_targets)
 print "all-png: %s\n.PHONY: all-png" % ' '.join(png_targets)
+print "all-velocity: %s\n.PHONY: all-velocity" % ' '.join(velocity_targets)
