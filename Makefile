@@ -49,7 +49,7 @@ VELOCITY_IMG = $(BATCH_DIR)/velocities.png
 COMPARISON_CSV = $(BATCH_DIR)/comparison.csv
 TEXT_FILES = $(patsubst %.las,$(TEXT_DIR)/%.txt,$(shell cat $(LASFILE_MANIFEST)))
 
-all:
+all: velocities comparison
 .PHONY: all
 
 clean:
@@ -58,9 +58,9 @@ clean:
 	rm -f change.mk
 
 # CPD targets
-include change.mk
+include $(BATCH_DIR)/change.mk
 
-change.mk: Makefile generate
+$(BATCH_DIR)/change.mk: Makefile generate
 	rm -f $@
 	./generate "$(LASFILE_MANIFEST)" "$(LASFILE_DIR)" > $@
 
