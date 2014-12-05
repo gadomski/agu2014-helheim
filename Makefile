@@ -60,7 +60,7 @@ clean:
 # CPD targets
 include $(BATCH_DIR)/change.mk
 
-$(BATCH_DIR)/change.mk: Makefile generate
+$(BATCH_DIR)/change.mk: Makefile generate $(LASFILE_MANIFEST) $(GPSFILE)
 	rm -f $@
 	./generate "$(LASFILE_MANIFEST)" "$(LASFILE_DIR)" > $@
 
