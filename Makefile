@@ -63,6 +63,14 @@ change.mk: Makefile generate
 	./generate "$(LASFILE_MANIFEST)" "$(LASFILE_DIR)" > $@
 
 
+# Plot velocities
+velocities: $(BATCH_DIR)/velocities.png
+.PHONY: velocities
+
+$(BATCH_DIR)/velocities.png: $(GPSFILE) all-change | $(BATCH_DIR)
+	rscript $(VELOCITY_SCRIPT) $< $(CHANGE_DIR) $@
+
+
 # Text file generation
 las-to-txt: $(TEXT_FILES)
 .PHONY: las-to-txt
