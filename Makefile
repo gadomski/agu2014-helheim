@@ -42,6 +42,11 @@ TEXT_FILES = $(patsubst %.las,$(TEXT_DIR)/%.txt,$(shell cat $(LASFILE_MANIFEST))
 all:
 .PHONY: all
 
+clean:
+	rm -rf $(PDAL_BUILD_DIR)
+	rm -rf $(CPD_BUILD_DIR)
+	rm -f change.mk
+
 # CPD targets
 include change.mk
 
