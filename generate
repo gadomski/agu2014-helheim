@@ -23,7 +23,7 @@ def get_name(x, y):
 def print_change_target(x, y):
     name = get_name(x, y)
     print """\
-$(CHANGE_DIR)/%(name)s.txt: $(LASFILE_DIR)/%(x)s $(LASFILE_DIR)/%(y)s | $(CHANGE_DIR)
+$(CHANGE_DIR)/%(name)s.txt: $(LASFILE_DIR)/%(x)s $(LASFILE_DIR)/%(y)s | $(CHANGE_DIR) pdal
 \t$(PDAL_EXE) cpd -x $(firstword $^) -y $(lastword $^) -o $@ $(PDAL_CPD_ARGS) 2> >(tee $(@:%%.txt=%%.log) >&2)""" % locals()
     return "$(CHANGE_DIR)/%s.txt" % name
 
