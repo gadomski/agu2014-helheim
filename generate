@@ -15,15 +15,30 @@ def pairwise(iterable):
     next(b, None)
     return izip(a, b)
 
-def print_targets(x, y):
+def get_name(x, y):
     xname, _ = os.path.splitext(x)
     yname, _ = os.path.splitext(y)
-    name = xname + "-" + yname
+    return xname + "-" + yname
+
+def print_change_target(x, y):
+    name = get_name(x, y)
     print """\
 $(CHANGE_DIR)/%(name)s.txt: $(LASFILE_DIR)/%(x)s $(LASFILE_DIR)/%(y)s | $(CHANGE_DIR)
-\t$(PDAL_EXE) cpd -x $(firstword $^) -y $(lastword $^) -o $@ $(PDAL_CPD_ARGS) 2> >(tee $(@:%%.txt=%%.log) >&2)
+\t$(PDAL_EXE) cpd -x $(firstword $^) -y $(lastword $^) -o $@ $(PDAL_CPD_ARGS) 2> >(tee $(@:%%.txt=%%.log) >&2)""" % locals()
+    return "$(CHANGE_DIR)/%s.txt" % name
+
+def print_png_target(x, y):
+    name = get_name(x, y)
+    print """\
 $(PNG_DIR)/%(name)s.png: $(CHANGE_DIR)/%(name)s.txt $(PLOT_SCRIPT) | $(PNG_DIR)
 \trscript $(PLOT_SCRIPT) $< $@"""  % locals()
+    return "$(PNG_DIR)/%s.png" % name
 
+change_targets = []
+png_targets = []
 for x, y in pairwise(filenames):
-    print_targets(x, y)
+    change_targets += [print_change_target(x, y)]
+    png_targets += [print_png_target(x, y)]
+
+print "all-change: %s\n.PHONY: all-change" % ' '.join(change_targets)
+print "all-png: %s\n.PHONY: all-png" % ' '.join(png_targets)
