@@ -27,6 +27,7 @@ PDAL_CMAKE_ARGS = -DBUILD_PLUGIN_CPD=TRUE \
 # Buildout
 BUILDOUT_DIR = default
 LASFILE_DIR = ../las/1m
+GPS_DIR = ../gps
 
 R_DIR = R
 MAGNITUDE_SCRIPT = $(R_DIR)/magnitude.R
@@ -40,6 +41,7 @@ CHANGE_DIR = $(BUILDOUT_DIR)/change
 MAGNITUDE_DIR = $(BUILDOUT_DIR)/magnitude
 VELOCITY_IMG = $(BUILDOUT_DIR)/velocities.png
 GPS_COMPARISON_CSV = $(BUILDOUT_DIR)/gps-comparison.csv
+GPS_CSV = $(BUILDOUT_DIR)/$(GPS_STATION).csv
 
 NUMEIG = 0
 TOL = 1e-05
@@ -49,12 +51,16 @@ MINY = MUST_BE_SET_IN_BUILDOUT_CONFIG
 MINY = MUST_BE_SET_IN_BUILDOUT_CONFIG
 MINZ = -10000
 MAXZ = 10000
+MINMAGNITUDE = MUST_BE_SET_IN_BUILDOUT_CONFIG
+MAXMAGNITUDE = MUST_BE_SET_IN_BUILDOUT_CONFIG
 GPS_STATION = MUST_BE_SET_IN_BUILDOUT_CONFIG
 
 include $(CONFIG_FILE)
 
 BOUNDS = "([$(MINX),$(MAXX)],[$(MINY),$(MAXY)],[$(MINZ),$(MAXZ)])"
 PDAL_CPD_ARGS = --bounds $(BOUNDS) --numeig $(NUMEIG) --tol $(TOL)
+
+STANDARD_BUILDOUT_DEPENDENCIES = Makefile $(CONFIG_FILE) $(LASFILE_MANIFEST)
 
 
 #
@@ -80,13 +86,13 @@ clean:
 # Buildout
 # Includes crop, change, and magnitude
 include $(BUILDOUT_DIR)/targets.mk
-$(BUILDOUT_DIR)/targets.mk: Makefile targets-from-config $(LASFILE_MANIFEST)
+$(BUILDOUT_DIR)/targets.mk: targets-from-config $(STANDARD_BUILDOUT_DEPENDENCIES)
 	rm -f $@
 	./targets-from-config "$(LASFILE_MANIFEST)" "$(LASFILE_DIR)" > $@
 
-$(GPS_CSV): | $(BUILDOUT_DIR)
+$(GPS_CSV): corresponding-gps-points $(STANDARD_BUILDOUT_DEPENDENCIES) | $(BUILDOUT_DIR)
 	rm -f $@
-	./corresponding-gps-points "$(LASFILE_MANIFSET)" "$(GPS_DIR)" "$(GPS_STATION)" > $@
+	./corresponding-gps-points "$(LASFILE_MANIFEST)" "$(GPS_DIR)/$(GPS_STATION).csv" > $@
 
 velocity-plot: $(VELOCITY_IMG)
 .PHONY: velocity-plot

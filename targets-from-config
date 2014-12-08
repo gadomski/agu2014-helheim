@@ -33,16 +33,16 @@ $(CROP_DIR)/%(x)s: $(LASFILE_DIR)/%(x)s | $(CROP_DIR) pdal
 def print_change_target(x, y):
     name = get_name(x, y)
     print """\
-$(CHANGE_DIR)/%(name)s.txt: $(LASFILE_DIR)/%(x)s $(LASFILE_DIR)/%(y)s | $(CHANGE_DIR) pdal
-\t$(PDAL_EXE) cpd -x $(firstword $^) -y $(lastword $^) -o $@ $(PDAL_CPD_ARGS) 2> >(tee $(@:%%.txt=%%.log) >&2)""" % locals()
+$(CHANGE_DIR)/%(name)s.txt: $(LASFILE_DIR)/%(x)s $(LASFILE_DIR)/%(y)s $(CONFIG_FILE)| $(CHANGE_DIR) pdal
+\t$(PDAL_EXE) cpd -x $(firstword $^) -y $(word 2,$^) -o $@ $(PDAL_CPD_ARGS) 2> >(tee $(@:%%.txt=%%.log) >&2)""" % locals()
     return "$(CHANGE_DIR)/%s.txt" % name
 
 
 def print_magnitude_target(x, y):
     name = get_name(x, y)
     print """\
-$(MAGNITUDE_DIR)/%(name)s.png: $(CHANGE_DIR)/%(name)s.txt $(MAGNITUDE_SCRIPT) | $(MAGNITUDE_DIR)
-\trscript $(MAGNITUDE_SCRIPT) $< $@"""  % locals()
+$(MAGNITUDE_DIR)/%(name)s.png: $(CHANGE_DIR)/%(name)s.txt $(MAGNITUDE_SCRIPT) $(CONFIG_FILE) | $(MAGNITUDE_DIR)
+\trscript $(MAGNITUDE_SCRIPT) $< $@ $(MINMAGNITUDE) $(MAXMAGNITUDE)"""  % locals()
     return "$(MAGNITUDE_DIR)/%s.png" % name
 
 

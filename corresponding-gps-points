@@ -1,0 +1,32 @@
+#!/usr/bin/env python
+import bisect
+import csv
+import datetime
+import sys
+
+filename = sys.argv[1]
+gpsfile = sys.argv[2]
+
+
+with open(filename) as f:
+    content = f.readlines()
+
+manifest_times = [datetime.datetime.strptime(filename[0:12], "%y%m%d_%H%M%S") for filename in content]
+
+rows = []
+datetimes = []
+with open(gpsfile, "rU") as f:
+    reader = csv.reader(f)
+    reader.next() # skip header
+    for row in reader:
+        try:
+            d = datetime.datetime.strptime(row[0] + " " + row[1], "%m/%d/%y %H:%M:%S")
+        except ValueError:
+            continue
+        datetimes.append(d)
+        rows.append(row)
+
+writer = csv.writer(sys.stdout)
+for time in manifest_times:
+    idx = bisect.bisect_left(datetimes, time)
+    writer.writerow(rows[idx])
