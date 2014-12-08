@@ -1,8 +1,11 @@
+#
 # Variables
+#
 SHELL = /bin/bash
 COMMON_CMAKE_ARGS = -G Ninja -DCMAKE_BUILD_TYPE=Release
 BUILD_CMD = ninja
 
+# Software
 CPD_BUILD_DIR = .cpd-build
 CPD_DEBUG_OUTPUT = TRUE
 CPD_LIB = $(CPD_BUILD_DIR)/lib/libcpd64.dylib
@@ -21,16 +24,24 @@ PDAL_CMAKE_ARGS = -DBUILD_PLUGIN_CPD=TRUE \
 				  -DCPD_LIBRARY=$(CURDIR)/$(CPD_LIB) \
 				  -DBUILD_PLUGIN_PGPOINTCLOUD=FALSE
 
+# Buildout
+BUILDOUT_DIR = default
 LASFILE_DIR = ../las/1m
-PLOT_SCRIPT = plot.R
-VELOCITY_SCRIPT = velocities.R
-COMARISON_SCRIPT = comparison.R
 
-BATCH_DIR = hg02
+R_DIR = R
+MAGNITUDE_SCRIPT = $(R_DIR)/magnitude.R
+VELOCITY_PLOT_SCRIPT = $(R_DIR)/velocities.R
+COMARISON_SCRIPT = $(R_DIR)/comparison.R
+
+LASFILE_MANIFEST = $(BUILDOUT_DIR)/MANIFEST.txt
+CROP_DIR = $(BUILDOUT_DIR)/crop
+CHANGE_DIR = $(BUILDOUT_DIR)/change
+MAGNITUDE_DIR = $(BUILDOUT_DIR)/magnitude
+VELOCITY_IMG = $(BUILDOUT_DIR)/velocities.png
+GPS_COMPARISON_CSV = $(BUILDOUT_DIR)/gps-comparison.csv
+
 NUMEIG = 0
 TOL = 1e-05
-LASFILE_MANIFEST = $(BATCH_DIR)/MANIFEST.txt
-GPSFILE = MUST_BE_SET_IN_SUBFOLDER
 MINX = MUST_BE_SET_IN_SUBFOLDER
 MAXX = MUST_BE_SET_IN_SUBFOLDER
 MINY = MUST_BE_SET_IN_SUBFOLDER
@@ -38,59 +49,37 @@ MINY = MUST_BE_SET_IN_SUBFOLDER
 MINZ = -10000
 MAXZ = 10000
 
-include $(BATCH_DIR)/batch.mk
+include $(BUILDOUT_DIR)/config.mk
 
 BOUNDS = "([$(MINX),$(MAXX)],[$(MINY),$(MAXY)],[$(MINZ),$(MAXZ)])"
 PDAL_CPD_ARGS = --bounds $(BOUNDS) --numeig $(NUMEIG) --tol $(TOL)
-CHANGE_DIR = $(BATCH_DIR)/change
-PNG_DIR = $(BATCH_DIR)/png
-TEXT_DIR = $(BATCH_DIR)/text
-VELOCITY_IMG = $(BATCH_DIR)/velocities.png
-COMPARISON_CSV = $(BATCH_DIR)/comparison.csv
-TEXT_FILES = $(patsubst %.las,$(TEXT_DIR)/%.txt,$(shell cat $(LASFILE_MANIFEST)))
 
-all: velocities comparison
+
+#
+# Default target
+#
+all: crop change magnitude velocity-plot gps-comparison-csv
 .PHONY: all
 
-clean:
-	rm -rf $(PDAL_BUILD_DIR)
-	rm -rf $(CPD_BUILD_DIR)
-	rm -f change.mk
 
-# CPD targets
-include $(BATCH_DIR)/change.mk
-
-$(BATCH_DIR)/change.mk: Makefile generate $(LASFILE_MANIFEST) $(GPSFILE)
+# Buildout
+# Includes crop, change, and magnitude
+include $(BUILDOUT_DIR)/config.mk
+$(BUILDOUT_DIR)/config.mk: Makefile generate $(LASFILE_MANIFEST)
 	rm -f $@
-	./generate "$(LASFILE_MANIFEST)" "$(LASFILE_DIR)" > $@
+	./targets-from-config "$(LASFILE_MANIFEST)" "$(LASFILE_DIR)" > $@
 
+velocity-plot: $(VELOCITY_IMG)
+.PHONY: velocity-plot
 
-# Plot velocities
-velocities: $(VELOCITY_IMG)
-.PHONY: velocities
+$(VELOCITY_IMG): change | $(BUILDOUT_DIR)
+	rscript $(VELOCITY_PLOT_SCRIPT) $< $(CHANGE_DIR) $@
 
-$(VELOCITY_IMG): $(GPSFILE) all-change | $(BATCH_DIR)
-	rscript $(VELOCITY_SCRIPT) $< $(CHANGE_DIR) $@
+gps-comparison-csv: $(GPS_COMPARISON_CSV)
+.PHONY: gps-comparison-csv
 
-# Save csv comparison
-comparison: $(COMPARISON_CSV)
-.PHONY: comparison
-
-$(COMPARISON_CSV): $(GPSFILE) all-change | $(BATCH_DIR)
+$(GPS_COMPARISON_CSV): change | $(BUILDOUT_DIR)
 	rscript $(COMARISON_SCRIPT) $< $(CHANGE_DIR) $@
-
-
-# Text file generation
-las-to-txt: $(TEXT_FILES)
-.PHONY: las-to-txt
-
-$(TEXT_DIR)/%.txt: $(LASFILE_DIR)/%.las | $(TEXT_DIR)
-	$(PDAL_EXE) translate -i $< -o $@ \
-	    --bounds $(BOUNDS) \
-	    --writers.text.keep_unspecified=false \
-	    --writers.text.order=X,Y,Z \
-	    --writers.text.precision=3 \
-	    --writers.text.write_header=false
 
 
 # Software targets
@@ -125,17 +114,17 @@ $(PDAL_BUILD_DIR):
 $(CPD_BUILD_DIR):
 	mkdir $@
 
-$(CHANGE_DIR): | $(BATCH_DIR)
+$(CHANGE_DIR): | $(BUILDOUT_DIR)
 	mkdir $@
 
-$(PNG_DIR): | $(BATCH_DIR)
+$(PNG_DIR): | $(BUILDOUT_DIR)
 	mkdir $@
 
-$(TEXT_DIR): | $(BATCH_DIR)
+$(TEXT_DIR): | $(BUILDOUT_DIR)
 	mkdir $@
 
-$(VELOCITY_DIR): | $(BATCH_DIR)
+$(VELOCITY_DIR): | $(BUILDOUT_DIR)
 	mkdir $@
 
-$(BATCH_DIR):
+$(BUILDOUT_DIR):
 	mkdir $@
