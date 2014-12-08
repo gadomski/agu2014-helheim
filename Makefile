@@ -34,6 +34,7 @@ VELOCITY_PLOT_SCRIPT = $(R_DIR)/velocities.R
 COMARISON_SCRIPT = $(R_DIR)/comparison.R
 
 LASFILE_MANIFEST = $(BUILDOUT_DIR)/MANIFEST.txt
+CONFIG_FILE = $(BUILDOUT_DIR)/config.mk
 CROP_DIR = $(BUILDOUT_DIR)/crop
 CHANGE_DIR = $(BUILDOUT_DIR)/change
 MAGNITUDE_DIR = $(BUILDOUT_DIR)/magnitude
@@ -49,7 +50,7 @@ MINY = MUST_BE_SET_IN_SUBFOLDER
 MINZ = -10000
 MAXZ = 10000
 
-include $(BUILDOUT_DIR)/config.mk
+include $(CONFIG_FILE)
 
 BOUNDS = "([$(MINX),$(MAXX)],[$(MINY),$(MAXY)],[$(MINZ),$(MAXZ)])"
 PDAL_CPD_ARGS = --bounds $(BOUNDS) --numeig $(NUMEIG) --tol $(TOL)
@@ -61,11 +62,24 @@ PDAL_CPD_ARGS = --bounds $(BOUNDS) --numeig $(NUMEIG) --tol $(TOL)
 all: crop change magnitude velocity-plot gps-comparison-csv
 .PHONY: all
 
+setup: $(LASFILE_MANIFEST) $(CONFIG_FILE)
+	@echo "Buildout directory $(BUILDOUT_DIR) setup succesfully. Now go fill in the config and the manifest."
+.PHONY: setup
+
+$(LASFILE_MANIFEST): | $(BUILDOUT_DIR)
+	touch $(LASFILE_MANIFEST)
+
+$(CONFIG_FILE): | $(BUILDOUT_DIR)
+	printf "MINX =\nMAXX =\nMINY =\nMAXY =" > $(CONFIG_FILE)
+
+clean:
+	rm -rf $(BUILDOUT_DIR)
+
 
 # Buildout
 # Includes crop, change, and magnitude
-include $(BUILDOUT_DIR)/config.mk
-$(BUILDOUT_DIR)/config.mk: Makefile generate $(LASFILE_MANIFEST)
+include $(BUILDOUT_DIR)/targets.mk
+$(BUILDOUT_DIR)/targets.mk: Makefile targets-from-config $(LASFILE_MANIFEST)
 	rm -f $@
 	./targets-from-config "$(LASFILE_MANIFEST)" "$(LASFILE_DIR)" > $@
 
