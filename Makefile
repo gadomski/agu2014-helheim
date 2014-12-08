@@ -82,7 +82,7 @@ $(CONFIG_FILE): | $(BUILDOUT_DIR)
 	printf "MINX = CONFIGURE_ME\nMAXX = CONFIGURE_ME\nMINY = CONFIGURE_ME\nMAXY = CONFIGURE_ME\nGPS_STATION = CONFIGURE_ME\nMINMAGNITUDE = CONFIGURE_ME\nMAXMAGNITUDE = CONFIGURE_ME" > $(CONFIG_FILE)
 
 clean:
-	rm -rf $(PRODUCTS)
+	rm -rf $(PRODUCTS) $(TARBALL_NAME)
 
 archive: crop change magnitude velocity-plot gps-comparison-csv
 	tar czvf $(TARBALL_NAME) $(BUILDOUT_DIR)
