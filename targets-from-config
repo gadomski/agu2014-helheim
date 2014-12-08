@@ -10,15 +10,25 @@ with open(filename) as f:
 
 filenames = [x.strip('\n') for x in content]
 
+
 def pairwise(iterable):
     a, b = tee(iterable)
     next(b, None)
     return izip(a, b)
 
+
 def get_name(x, y):
     xname, _ = os.path.splitext(x)
     yname, _ = os.path.splitext(y)
     return xname + "-" + yname
+
+
+def print_crop_target(x):
+    print """\
+$(CROP_DIR)/$(name)s.las: $(LASFILE_DIR)/$(x)s | $(CROP_DIR) pdal
+\t$(PDAL_EXE) translate -i $< -o $@ --bounds $(BOUNDS) 2> >(tee $(@:%%.las=%%.log) >&2)""" % locals()
+    return "$(CROP_DIR)/%s" % x
+
 
 def print_change_target(x, y):
     name = get_name(x, y)
@@ -27,28 +37,30 @@ $(CHANGE_DIR)/%(name)s.txt: $(LASFILE_DIR)/%(x)s $(LASFILE_DIR)/%(y)s | $(CHANGE
 \t$(PDAL_EXE) cpd -x $(firstword $^) -y $(lastword $^) -o $@ $(PDAL_CPD_ARGS) 2> >(tee $(@:%%.txt=%%.log) >&2)""" % locals()
     return "$(CHANGE_DIR)/%s.txt" % name
 
-def print_png_target(x, y):
+
+def print_magnitude_target(x, y):
     name = get_name(x, y)
     print """\
-$(PNG_DIR)/%(name)s.png: $(CHANGE_DIR)/%(name)s.txt $(PLOT_SCRIPT) | $(PNG_DIR)
-\trscript $(PLOT_SCRIPT) $< $@"""  % locals()
-    return "$(PNG_DIR)/%s.png" % name
+$(MAGNITUDE_DIR)/%(name)s.png: $(CHANGE_DIR)/%(name)s.txt $(MAGNITUDE_SCRIPT) | $(MAGNITUDE_DIR)
+\trscript $(MAGNITUDE_SCRIPT) $< $@"""  % locals()
+    return "$(MAGNITUDE_DIR)/%s.png" % name
 
-def print_velocity_target(x, y):
-    name = get_name(x, y)
-    print """\
-$(VELOCITY_DIR)/%(name)s.png: $(CHANGE_DIR)/%(name)s.txt $(PLOT_SCRIPT) | $(VELOCITY_DIR)
-\trscript $(VELOCITY_SCRIPT) $< $@"""  % locals()
-    return "$(VELOCITY_DIR)/%s.txt" % name
 
+def print_toplevel_target(name, targets):
+    print "%s: %s\n.PHONY: %s" % (name, ' '.join(targets), name)
+
+
+crop_targets = []
 change_targets = []
-png_targets = []
-velocity_targets = []
+magnitude_targets = []
+
+for x in filenames:
+    crop_targets += [print_crop_target(x)]
+
 for x, y in pairwise(filenames):
     change_targets += [print_change_target(x, y)]
-    png_targets += [print_png_target(x, y)]
-    velocity_targets += [print_velocity_target(x, y)]
+    magnitude_targets += [print_magnitude_target(x, y)]
 
-print "all-change: %s\n.PHONY: all-change" % ' '.join(change_targets)
-print "all-png: %s\n.PHONY: all-png" % ' '.join(png_targets)
-print "all-velocity: %s\n.PHONY: all-velocity" % ' '.join(velocity_targets)
+print_toplevel_target("crop", crop_targets)
+print_toplevel_target("change", change_targets)
+print_toplevel_target("magnitude", magnitude_targets)
