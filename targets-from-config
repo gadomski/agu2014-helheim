@@ -24,10 +24,11 @@ def get_name(x, y):
 
 
 def print_crop_target(x):
+    laz = x[:-1] + "z"
     print """\
-$(CROP_DIR)/%(x)s: $(LASFILE_DIR)/%(x)s | $(CROP_DIR) pdal
-\t$(PDAL_EXE) translate -i $< -o $@ --bounds $(BOUNDS) 2> >(tee $(@:%%.las=%%.log) >&2)""" % locals()
-    return "$(CROP_DIR)/%s" % x
+$(CROP_DIR)/%(laz)s: $(LASFILE_DIR)/%(x)s | $(CROP_DIR) pdal
+\t$(PDAL_EXE) translate -i $< -o $@ --bounds $(BOUNDS) 2> >(tee $(@:%%.laz=%%.log) >&2)""" % locals()
+    return "$(CROP_DIR)/%s" % laz
 
 
 def print_change_target(x, y):
