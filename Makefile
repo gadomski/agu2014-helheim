@@ -93,7 +93,14 @@ $(TEXT_DIR)/%.txt: $(LASFILE_DIR)/%.las | $(TEXT_DIR)
 	    --writers.text.write_header=false
 
 
-# Build targets
+# Software targets
+software: cpd pdal
+.PHONY: software
+
+clean-software:
+	rm -rf $(CPD_BUILD_DIR) $(PDAL_BUILD_DIR)
+.PHONY: clean-software
+
 pdal: cpd $(PDAL_BUILD_DIR)/CMakeCache.txt
 	ninja -C $(PDAL_BUILD_DIR)
 .PHONY: pdal
