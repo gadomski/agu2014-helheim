@@ -15,9 +15,10 @@ manifest_times = [datetime.datetime.strptime(filename[0:12], "%y%m%d_%H%M%S") fo
 
 rows = []
 datetimes = []
+header = None
 with open(gpsfile, "rU") as f:
     reader = csv.reader(f)
-    reader.next() # skip header
+    header = reader.next() # skip header
     for row in reader:
         try:
             d = datetime.datetime.strptime(row[0] + " " + row[1], "%m/%d/%y %H:%M:%S")
@@ -27,6 +28,7 @@ with open(gpsfile, "rU") as f:
         rows.append(row)
 
 writer = csv.writer(sys.stdout)
+writer.writerow(header)
 for time in manifest_times:
     idx = bisect.bisect_left(datetimes, time)
     writer.writerow(rows[idx])
