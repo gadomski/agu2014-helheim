@@ -40,6 +40,7 @@ CONFIG_FILE = $(BUILDOUT_DIR)/config.mk
 CROP_DIR = $(BUILDOUT_DIR)/crop
 CHANGE_DIR = $(BUILDOUT_DIR)/change
 MAGNITUDE_DIR = $(BUILDOUT_DIR)/magnitude
+SEGMENT_DIR = $(BUILDOUT_DIR)/segment
 VELOCITY_IMG = $(BUILDOUT_DIR)/velocities.eps
 GPS_COMPARISON_CSV = $(BUILDOUT_DIR)/gps-comparison.csv
 GPS_CSV = $(BUILDOUT_DIR)/$(GPS_STATION).csv
@@ -56,11 +57,14 @@ MAXZ = 10000
 MINMAGNITUDE = MUST_BE_SET_IN_BUILDOUT_CONFIG
 MAXMAGNITUDE = MUST_BE_SET_IN_BUILDOUT_CONFIG
 GPS_STATION = MUST_BE_SET_IN_BUILDOUT_CONFIG
+SEGMENT_BUFFER = MUST_BE_SET_IN_BUILDOUT_CONFIG
+SEGMENT_SIZE = MUST_BE_SET_IN_BUILDOUT_CONFIG
 
 include $(CONFIG_FILE)
 
 BOUNDS = "([$(MINX),$(MAXX)],[$(MINY),$(MAXY)],[$(MINZ),$(MAXZ)])"
-PDAL_CPD_ARGS = --bounds $(BOUNDS) --numeig $(NUMEIG) --tol $(TOL)
+PDAL_CPD_ARGS_NOBOUNDS = --numeig $(NUMEIG) --tol $(TOL)
+PDAL_CPD_ARGS = $(PDAL_CPD_ARGS_NOBOUNDS) --bounds $(BOUNDS)
 
 PRODUCTS = $(CHANGE_DIR) $(CROP_DIR) $(MAGNITUDE_DIR) $(VELOCITY_IMG) $(GPS_COMPARISON_CSV) $(GPS_CSV)
 STANDARD_BUILDOUT_DEPENDENCIES = Makefile $(CONFIG_FILE) $(LASFILE_MANIFEST)
@@ -115,6 +119,15 @@ $(GPS_COMPARISON_CSV): $(GPS_CSV) change | $(BUILDOUT_DIR)
 	rscript $(COMARISON_SCRIPT) $< $(CHANGE_DIR) $@
 
 
+# Segmented CPD
+ifneq ($(BUILDOUT_DIR), default)
+    include $(BUILDOUT_DIR)/segmented-targets.mk
+    $(BUILDOUT_DIR)/segmented-targets.mk: segmented-targets-from-config $(STANDARD_BUILDOUT_DEPENDENCIES)
+	    rm -f $@
+	    ./segmented-targets-from-config "$(LASFILE_MANIFEST)" "$(MINX)" "$(MAXX)" "$(MINY)" "$(MAXY)" "$(SEGMENT_SIZE)" "$(SEGMENT_BUFFER)" > $@
+endif
+	
+
 # Software targets
 software: cpd pdal
 .PHONY: software
@@ -154,6 +167,9 @@ $(CROP_DIR): | $(BUILDOUT_DIR)
 	mkdir $@
 
 $(MAGNITUDE_DIR): | $(BUILDOUT_DIR)
+	mkdir $@
+
+$(SEGMENT_DIR): | $(BUILDOUT_DIR)
 	mkdir $@
 
 $(ARCHIVE_DIR):

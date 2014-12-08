@@ -1,0 +1,71 @@
+#!/usr/bin/env python
+from itertools import tee, izip
+import sys
+
+from common import pairwise, get_name, print_toplevel_target
+
+
+def pairwise(iterable):
+    a, b = tee(iterable)
+    next(b, None)
+    return izip(a, b)
+
+
+def print_targets(filex, filey, bounds):
+    name = get_name(filex, filey)
+
+    segment_parts_dir = name + "_parts"
+    print """\
+SEGMENT_PARTS_DIR = $(SEGMENT_DIR)/%s
+$(SEGMENT_PARTS_DIR): | $(SEGMENT_DIR)
+\tmkdir -p $@""" % segment_parts_dir
+
+    segments = []
+    for b in bounds:
+        output = "%(x0)s_%(x1)s-%(y0)s_%(y1)s.txt" % b
+        v = {"filex": filex, "filey": filey, "output": output,
+                "bounds": "\"([%(x0)s,%(x1)s],[%(y0)s,%(y1)s],[$(MINZ),$(MAXZ)])\"" % b}
+        print """\
+$(SEGMENT_PARTS_DIR)/%(output)s: $(LASFILE_DIR)/%(filex)s $(LASFILE_DIR)/%(filey)s | $(CHANGE_DIR) pdal $(SEGMENT_PARTS_DIR)
+\t$(PDAL_EXE) cpd -x $(firstword $^) -y $(word 2,$^) -o $@ $(PDAL_CPD_ARGS_NOBOUNDS) --bounds %(bounds)s --warn-on-empty true 2> >(tee $(@:%%.txt=%%.log) >&2)""" % v
+        segments.append("$(SEGMENT_PARTS_DIR)/%s" % output)
+
+
+
+    print """\
+$(SEGMENT_DIR)/%s.txt: %s | $(SEGMENT_DIR)
+\t./smush-segments $^ > $@""" % (name, ' '.join(segments))
+
+    return "$(SEGMENT_DIR)/%s.txt" % name
+
+
+
+filename = sys.argv[1]
+minx, maxx, miny, maxy = [int(x) for x in sys.argv[2:6]]
+segment_size = int(sys.argv[6])
+segment_buffer = int(sys.argv[7])
+
+with open(filename) as f:
+    lasfiles = [x.strip('\n') for x in f.readlines()]
+
+x = minx
+y = miny
+
+bounds = []
+while x < maxx:
+    while y < maxy:
+        bounds.append({
+            "x0": x - segment_buffer,
+            "x1": x + segment_size + segment_buffer,
+            "y0": y - segment_buffer,
+            "y1": y + segment_size + segment_buffer,
+            })
+        y += segment_size
+    x += segment_size
+    y = miny
+
+targets = []
+for filex, filey in pairwise(lasfiles):
+    targets.append(print_targets(filex, filey, bounds))
+
+print_toplevel_target("segmented-cpd", targets)
