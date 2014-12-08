@@ -1,9 +1,11 @@
 .cpd-build/
 .pdal-build/
 Rplots.pdf
-change/
-png/
-text/
-change.mk
-comparison.csv
+*/change/
+*/magnitude/
+*/crop/
+gps-comparison.csv
 velocities.png
+hg02.csv
+hg03.csv
+*/targets.mk

@@ -42,6 +42,7 @@ MAGNITUDE_DIR = $(BUILDOUT_DIR)/magnitude
 VELOCITY_IMG = $(BUILDOUT_DIR)/velocities.png
 GPS_COMPARISON_CSV = $(BUILDOUT_DIR)/gps-comparison.csv
 GPS_CSV = $(BUILDOUT_DIR)/$(GPS_STATION).csv
+TARBALL_NAME = $(BUILDOUT_DIR).tgz
 
 NUMEIG = 0
 TOL = 1e-05
@@ -81,6 +82,9 @@ $(CONFIG_FILE): | $(BUILDOUT_DIR)
 
 clean:
 	rm -rf $(CHANGE_DIR) $(CROP_DIR) $(MAGNITUDE_DIR) $(VELOCITY_IMG) $(GPS_COMPARISON_CSV) $(GPS_CSV)
+
+archive:
+	tar czvf $(TARBALL_NAME) $(BUILDOUT_DIR)
 
 
 # Buildout
