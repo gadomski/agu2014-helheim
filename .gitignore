@@ -9,3 +9,4 @@ velocities.png
 hg02.csv
 hg03.csv
 */targets.mk
+*.tgz

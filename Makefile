@@ -61,13 +61,14 @@ include $(CONFIG_FILE)
 BOUNDS = "([$(MINX),$(MAXX)],[$(MINY),$(MAXY)],[$(MINZ),$(MAXZ)])"
 PDAL_CPD_ARGS = --bounds $(BOUNDS) --numeig $(NUMEIG) --tol $(TOL)
 
+PRODUCTS = $(CHANGE_DIR) $(CROP_DIR) $(MAGNITUDE_DIR) $(VELOCITY_IMG) $(GPS_COMPARISON_CSV) $(GPS_CSV)
 STANDARD_BUILDOUT_DEPENDENCIES = Makefile $(CONFIG_FILE) $(LASFILE_MANIFEST)
 
 
 #
 # Default target
 #
-all: crop change magnitude velocity-plot gps-comparison-csv
+all: crop change magnitude velocity-plot gps-comparison-csv archive
 .PHONY: all
 
 setup: $(LASFILE_MANIFEST) $(CONFIG_FILE)
@@ -81,9 +82,9 @@ $(CONFIG_FILE): | $(BUILDOUT_DIR)
 	printf "MINX = CONFIGURE_ME\nMAXX = CONFIGURE_ME\nMINY = CONFIGURE_ME\nMAXY = CONFIGURE_ME\nGPS_STATION = CONFIGURE_ME\nMINMAGNITUDE = CONFIGURE_ME\nMAXMAGNITUDE = CONFIGURE_ME" > $(CONFIG_FILE)
 
 clean:
-	rm -rf $(CHANGE_DIR) $(CROP_DIR) $(MAGNITUDE_DIR) $(VELOCITY_IMG) $(GPS_COMPARISON_CSV) $(GPS_CSV)
+	rm -rf $(PRODUCTS)
 
-archive:
+archive: crop change magnitude velocity-plot gps-comparison-csv
 	tar czvf $(TARBALL_NAME) $(BUILDOUT_DIR)
 
 
