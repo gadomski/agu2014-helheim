@@ -28,6 +28,7 @@ PDAL_CMAKE_ARGS = -DBUILD_PLUGIN_CPD=TRUE \
 BUILDOUT_DIR = default
 LASFILE_DIR = ../las/1m
 GPS_DIR = ../gps
+ARCHIVE_DIR = _archive
 
 R_DIR = R
 MAGNITUDE_SCRIPT = $(R_DIR)/magnitude.R
@@ -39,10 +40,10 @@ CONFIG_FILE = $(BUILDOUT_DIR)/config.mk
 CROP_DIR = $(BUILDOUT_DIR)/crop
 CHANGE_DIR = $(BUILDOUT_DIR)/change
 MAGNITUDE_DIR = $(BUILDOUT_DIR)/magnitude
-VELOCITY_IMG = $(BUILDOUT_DIR)/velocities.png
+VELOCITY_IMG = $(BUILDOUT_DIR)/velocities.eps
 GPS_COMPARISON_CSV = $(BUILDOUT_DIR)/gps-comparison.csv
 GPS_CSV = $(BUILDOUT_DIR)/$(GPS_STATION).csv
-TARBALL_NAME = $(BUILDOUT_DIR).tgz
+TARBALL_NAME = $(ARCHIVE_DIR)/$(BUILDOUT_DIR).tgz
 
 NUMEIG = 0
 TOL = 1e-05
@@ -83,9 +84,11 @@ $(CONFIG_FILE): | $(BUILDOUT_DIR)
 
 clean:
 	rm -rf $(PRODUCTS) $(TARBALL_NAME)
+.PHONY: clean
 
-archive: crop change magnitude velocity-plot gps-comparison-csv
+archive: crop change magnitude velocity-plot gps-comparison-csv | $(ARCHIVE_DIR)
 	tar czvf $(TARBALL_NAME) $(BUILDOUT_DIR)
+.PHONY: archive
 
 
 # Buildout
@@ -151,6 +154,9 @@ $(CROP_DIR): | $(BUILDOUT_DIR)
 	mkdir $@
 
 $(MAGNITUDE_DIR): | $(BUILDOUT_DIR)
+	mkdir $@
+
+$(ARCHIVE_DIR):
 	mkdir $@
 
 $(BUILDOUT_DIR):

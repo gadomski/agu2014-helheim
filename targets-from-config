@@ -42,9 +42,9 @@ $(CHANGE_DIR)/%(name)s.txt: $(LASFILE_DIR)/%(x)s $(LASFILE_DIR)/%(y)s | $(CHANGE
 def print_magnitude_target(x, y):
     name = get_name(x, y)
     print """\
-$(MAGNITUDE_DIR)/%(name)s.png: $(CHANGE_DIR)/%(name)s.txt $(MAGNITUDE_SCRIPT) $(CONFIG_FILE) | $(MAGNITUDE_DIR)
+$(MAGNITUDE_DIR)/%(name)s.eps: $(CHANGE_DIR)/%(name)s.txt $(MAGNITUDE_SCRIPT) $(CONFIG_FILE) | $(MAGNITUDE_DIR)
 \trscript $(MAGNITUDE_SCRIPT) $< $@ $(MINMAGNITUDE) $(MAXMAGNITUDE)"""  % locals()
-    return "$(MAGNITUDE_DIR)/%s.png" % name
+    return "$(MAGNITUDE_DIR)/%s.eps" % name
 
 
 def print_toplevel_target(name, targets):
