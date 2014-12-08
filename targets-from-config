@@ -33,7 +33,7 @@ $(CROP_DIR)/%(x)s: $(LASFILE_DIR)/%(x)s | $(CROP_DIR) pdal
 def print_change_target(x, y):
     name = get_name(x, y)
     print """\
-$(CHANGE_DIR)/%(name)s.txt: $(LASFILE_DIR)/%(x)s $(LASFILE_DIR)/%(y)s $(CONFIG_FILE)| $(CHANGE_DIR) pdal
+$(CHANGE_DIR)/%(name)s.txt: $(LASFILE_DIR)/%(x)s $(LASFILE_DIR)/%(y)s | $(CHANGE_DIR) pdal
 \t$(PDAL_EXE) cpd -x $(firstword $^) -y $(word 2,$^) -o $@ $(PDAL_CPD_ARGS) 2> >(tee $(@:%%.txt=%%.log) >&2)""" % locals()
     return "$(CHANGE_DIR)/%s.txt" % name
 
