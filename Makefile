@@ -139,5 +139,8 @@ $(CHANGE_DIR): | $(BUILDOUT_DIR)
 $(CROP_DIR): | $(BUILDOUT_DIR)
 	mkdir $@
 
+$(MAGNITUDE_DIR): | $(BUILDOUT_DIR)
+	mkdir $@
+
 $(BUILDOUT_DIR):
 	mkdir $@
