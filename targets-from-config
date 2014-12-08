@@ -25,7 +25,7 @@ def get_name(x, y):
 
 def print_crop_target(x):
     print """\
-$(CROP_DIR)/$(name)s.las: $(LASFILE_DIR)/$(x)s | $(CROP_DIR) pdal
+$(CROP_DIR)/%(x)s: $(LASFILE_DIR)/%(x)s | $(CROP_DIR) pdal
 \t$(PDAL_EXE) translate -i $< -o $@ --bounds $(BOUNDS) 2> >(tee $(@:%%.las=%%.log) >&2)""" % locals()
     return "$(CROP_DIR)/%s" % x
 
