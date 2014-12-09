@@ -160,4 +160,4 @@ $(ARCHIVE_DIR):
 	mkdir $@
 
 $(BUILDOUT_DIR):
-	mkdir $@
+	mkdir -p $@
