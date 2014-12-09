@@ -4,8 +4,10 @@ Rplots.pdf
 change/
 magnitude/
 crop/
+default/
 gps-comparison.csv
 velocities.eps
+velocities.png
 hg02.csv
 hg03.csv
 targets.mk
