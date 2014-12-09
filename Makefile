@@ -89,6 +89,7 @@ clean:
 .PHONY: clean
 
 archive: crop change magnitude velocity-plot gps-comparison-csv | $(ARCHIVE_DIR)
+	mkdir -p $(dir $(TARBALL_NAME))
 	tar czvf $(TARBALL_NAME) $(BUILDOUT_DIR)
 .PHONY: archive
 
