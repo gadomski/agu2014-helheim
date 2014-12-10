@@ -7,6 +7,7 @@ from common import pairwise, get_name, print_toplevel_target
 
 filename = sys.argv[1]
 dirname = sys.argv[2]
+chip = sys.argv[3] == "true"
 with open(filename) as f:
     content = f.readlines()
 
@@ -15,17 +16,21 @@ filenames = [x.strip('\n') for x in content]
 
 def print_crop_target(x):
     laz = x[:-1] + "z"
-    print """\
-$(CROP_DIR)/%(laz)s: $(LASFILE_DIR)/%(x)s | $(CROP_DIR) pdal
-\t$(PDAL_EXE) translate -i $< -o $@ --bounds $(BOUNDS) 2> >(tee $(@:%%.laz=%%.log) >&2)""" % locals()
+    print "$(CROP_DIR)/%(laz)s: $(LASFILE_DIR)/%(x)s | $(CROP_DIR) pdal" % locals()
+    if chip:
+        print "\t@echo Not cropping for a chip run"
+    else:
+        print "\t$(PDAL_EXE) translate -i $< -o $@ --bounds $(BOUNDS) 2> >(tee $(@:%%.laz=%%.log) >&2)""" % locals()
     return "$(CROP_DIR)/%s" % laz
 
 
 def print_change_target(x, y):
     name = get_name(x, y)
-    print """\
-$(CHANGE_DIR)/%(name)s.txt: $(LASFILE_DIR)/%(x)s $(LASFILE_DIR)/%(y)s | $(CHANGE_DIR) pdal
-\t$(PDAL_EXE) cpd -x $(firstword $^) -y $(word 2,$^) -o $@ $(PDAL_CPD_ARGS) 2> >(tee $(@:%%.txt=%%.log) >&2)""" % locals()
+    print "$(CHANGE_DIR)/%(name)s.txt: $(LASFILE_DIR)/%(x)s $(LASFILE_DIR)/%(y)s | $(CHANGE_DIR) pdal" % locals()
+    if chip:
+        print "\t$(PDAL_EXE) cpd -x $(firstword $^) -y $(word 2,$^) -o $@ $(PDAL_CPD_CHIP_ARGS) 2> >(tee $(@:%%.txt=%%.log) >&2)""" % locals()
+    else:
+        print "\t$(PDAL_EXE) cpd -x $(firstword $^) -y $(word 2,$^) -o $@ $(PDAL_CPD_ARGS) 2> >(tee $(@:%%.txt=%%.log) >&2)""" % locals()
     return "$(CHANGE_DIR)/%s.txt" % name
 
 

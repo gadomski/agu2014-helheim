@@ -50,6 +50,7 @@ OUTLIERS = 0.1
 BETA = 2
 LAMBDA = 3
 AUTO_Z_EXAGGERATION = false
+CHIP = false
 PLOT_FILE_EXTENSION = eps
 MINX = MUST_BE_SET_IN_BUILDOUT_CONFIG
 MAXX = MUST_BE_SET_IN_BUILDOUT_CONFIG
@@ -60,12 +61,16 @@ MAXZ = 10000
 MINMAGNITUDE = MUST_BE_SET_IN_BUILDOUT_CONFIG
 MAXMAGNITUDE = MUST_BE_SET_IN_BUILDOUT_CONFIG
 GPS_STATION = MUST_BE_SET_IN_BUILDOUT_CONFIG
+CHIP_CAPACITY = 8000
+CHIP_BUFFER = 50
 VELOCITY_IMG = $(BUILDOUT_DIR)/velocities.$(PLOT_FILE_EXTENSION)
 
 include $(CONFIG_FILE)
 
 BOUNDS = "([$(MINX),$(MAXX)],[$(MINY),$(MAXY)],[$(MINZ),$(MAXZ)])"
-PDAL_CPD_ARGS = --bounds $(BOUNDS) --numeig $(NUMEIG) --tol $(TOL) --auto-z-exaggeration $(AUTO_Z_EXAGGERATION) --outliers $(OUTLIERS) --beta $(BETA) --lambda $(LAMBDA)
+PDAL_CPD_BASE_ARGS =  --numeig $(NUMEIG) --tol $(TOL) --auto-z-exaggeration $(AUTO_Z_EXAGGERATION) --outliers $(OUTLIERS) --beta $(BETA) --lambda $(LAMBDA) --bounds $(BOUNDS)
+PDAL_CPD_ARGS = $(PDAL_CPD_BASE_ARGS)
+PDAL_CPD_CHIP_ARGS = $(PDAL_CPD_BASE_ARGS) --chipped true --chip-capacity $(CHIP_CAPACITY) --chip-buffer $(CHIP_BUFFER)
 
 PRODUCTS = $(CHANGE_DIR) $(CROP_DIR) $(MAGNITUDE_DIR) $(VELOCITY_IMG) $(GPS_COMPARISON_CSV) $(GPS_CSV)
 STANDARD_BUILDOUT_DEPENDENCIES = Makefile $(CONFIG_FILE) $(LASFILE_MANIFEST)
@@ -102,7 +107,7 @@ archive: crop change magnitude velocity-plot gps-comparison-csv | $(ARCHIVE_DIR)
 include $(BUILDOUT_DIR)/targets.mk
 $(BUILDOUT_DIR)/targets.mk: targets-from-config $(STANDARD_BUILDOUT_DEPENDENCIES)
 	rm -f $@
-	./targets-from-config "$(LASFILE_MANIFEST)" "$(LASFILE_DIR)" > $@
+	./targets-from-config "$(LASFILE_MANIFEST)" "$(LASFILE_DIR)" "$(CHIP)" > $@
 
 $(GPS_CSV): corresponding-gps-points $(STANDARD_BUILDOUT_DEPENDENCIES) | $(BUILDOUT_DIR)
 	rm -f $@
@@ -120,15 +125,6 @@ gps-comparison-csv: $(GPS_COMPARISON_CSV)
 $(GPS_COMPARISON_CSV): $(GPS_CSV) change | $(BUILDOUT_DIR)
 	rscript $(COMARISON_SCRIPT) $< $(CHANGE_DIR) $@
 
-
-# Segmented CPD
-ifneq ($(BUILDOUT_DIR), default)
-    include $(BUILDOUT_DIR)/segmented-targets.mk
-    $(BUILDOUT_DIR)/segmented-targets.mk: segmented-targets-from-config $(STANDARD_BUILDOUT_DEPENDENCIES)
-	    rm -f $@
-	    ./segmented-targets-from-config "$(LASFILE_MANIFEST)" "$(MINX)" "$(MAXX)" "$(MINY)" "$(MAXY)" "$(SEGMENT_SIZE)" "$(SEGMENT_BUFFER)" > $@
-endif
-	
 
 # Software targets
 software: cpd pdal
